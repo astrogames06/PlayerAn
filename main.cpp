@@ -13,113 +13,161 @@
     #include <emscripten/emscripten.h>
 #endif
 
-
 const int WIDTH = 850;
 const int HEIGHT = 450;
 
-Rectangle player = {100, 100, 50, 50};
+Vector2 playerPos = { 100, 100 }; // position of feet (bottom center)
 const float PLR_SPEED = 5.f;
+const float PLR_TEXTURE_SCALE = 5.f;
 
 Texture2D spriteSheet;
-int frameCount = 8; // Number of frames in the sprite sheet
-int rowCount = 4; // Number of rows of frames
-
+int frameCount = 8;
+int rowCount = 4;
 int frameWidth;
 int frameHeight;
 
+Rectangle axeRec;
+Texture2D axeSheet;
+int axeFrameCount = 8;
+int axeRowCount = 4;
+int axeFrameWidth;
+int axeFrameHeight;
+
 Rectangle frameRec;
-Vector2 position = { 200, 200 };
-
-const float PLR_TEXTURE_SCALE = 5.f;
-
 int currentFrame = 0;
 int framesCounter = 0;
-int framesSpeed = 8; // Animation speed: frames per second
+int framesSpeed = 8;
 int frameRow = 0;
+
+bool isAxeMode = false;
 
 void InitPlayer()
 {
-	spriteSheet = LoadTexture("images/axe.png");
-	frameCount = 8; // 8 columns
-	frameWidth = spriteSheet.width / frameCount;
-	frameHeight = spriteSheet.height / rowCount; // 4 rows
-	frameRec = { 0.0f, 0.0f, (float)frameWidth, (float)frameHeight };
+    spriteSheet = LoadTexture("images/spritesheet_robo.png");
+    frameWidth = spriteSheet.width / frameCount;
+    frameHeight = spriteSheet.height / rowCount;
+    frameRec = { 0.0f, 0.0f, (float)frameWidth, (float)frameHeight };
+
+    axeSheet = LoadTexture("images/axe.png");
+    axeFrameWidth = axeSheet.width / axeFrameCount;
+    axeFrameHeight = axeSheet.height / axeRowCount;
 }
 
 void UpdatePlayer()
 {
-	if (IsKeyDown(KEY_W)) {player.y -= PLR_SPEED; frameRow = 1;}
-	if (IsKeyDown(KEY_A)) {player.x -= PLR_SPEED; frameRow = 3;}
-	if (IsKeyDown(KEY_S)) {player.y += PLR_SPEED; frameRow = 0;}
-	if (IsKeyDown(KEY_D)) {player.x += PLR_SPEED; frameRow = 2;}
-	frameRec.y = frameHeight * frameRow;
+    isAxeMode = IsKeyDown(KEY_E);
 
-	if (IsKeyDown(KEY_W) || IsKeyDown(KEY_A) || IsKeyDown(KEY_S) || IsKeyDown(KEY_D)) {
-		framesCounter++;
-	}
-	else
-	{
-		framesCounter = 0;
-		currentFrame = 0;
-		frameRec.x = (float)currentFrame * frameWidth;
-	}
+    if (isAxeMode)
+    {
+        framesCounter++;
+		if (currentFrame >= axeFrameCount)
+		{
+			isAxeMode = false;
+		}
+        if (framesCounter >= (60 / (framesSpeed*1.5))) {
+            framesCounter = 0;
+            currentFrame = (currentFrame + 1);
+        }
+		axeRec = {
+            (float)(currentFrame * axeFrameWidth),
+            0.0f,
+            (float)axeFrameWidth,
+            (float)axeFrameHeight
+        };
+		axeRec.y = axeFrameHeight * frameRow;
+    }
+    else
+    {
+        if (IsKeyDown(KEY_W)) { playerPos.y -= PLR_SPEED; frameRow = 1; }
+        if (IsKeyDown(KEY_A)) { playerPos.x -= PLR_SPEED; frameRow = 3; }
+        if (IsKeyDown(KEY_S)) { playerPos.y += PLR_SPEED; frameRow = 0; }
+        if (IsKeyDown(KEY_D)) { playerPos.x += PLR_SPEED; frameRow = 2; }
 
-	if (framesCounter >= (60 / framesSpeed)) {
-		framesCounter = 0;
-		currentFrame = (currentFrame + 1) % frameCount;
-		frameRec.x = (float)currentFrame * frameWidth;
-	}
+        frameRec.y = frameHeight * frameRow;
+
+        if (IsKeyDown(KEY_W) || IsKeyDown(KEY_A) || IsKeyDown(KEY_S) || IsKeyDown(KEY_D)) {
+            framesCounter++;
+        }
+        else {
+            framesCounter = 0;
+            currentFrame = 0;
+            frameRec.x = (float)currentFrame * frameWidth;
+        }
+
+        if (framesCounter >= (60 / framesSpeed)) {
+            framesCounter = 0;
+            currentFrame = (currentFrame + 1) % frameCount;
+            frameRec.x = (float)currentFrame * frameWidth;
+        }
+    }
 }
 
 void DrawPlayer()
 {
-	DrawTexturePro(spriteSheet,
-		frameRec,
-		{player.x, player.y, frameRec.width * PLR_TEXTURE_SCALE, frameRec.height * PLR_TEXTURE_SCALE},
-		{0, 0},
-		0.f,
-	WHITE);
+    if (isAxeMode)
+    {
+        DrawTexturePro(axeSheet,
+            axeRec,
+            {
+                playerPos.x - (axeRec.width * PLR_TEXTURE_SCALE) / 2.0f,
+                playerPos.y - (axeRec.height * PLR_TEXTURE_SCALE) / 2.0f,
+                axeRec.width * PLR_TEXTURE_SCALE,
+                axeRec.height * PLR_TEXTURE_SCALE
+            },
+            { 0, 0 },
+            0.f,
+            WHITE);
+    }
+    else
+    {
+        DrawTexturePro(spriteSheet,
+            frameRec,
+            {
+                playerPos.x - (frameRec.width * PLR_TEXTURE_SCALE) / 2.0f,
+                playerPos.y - (frameRec.height * PLR_TEXTURE_SCALE) / 2.0f,
+                frameRec.width * PLR_TEXTURE_SCALE,
+                frameRec.height * PLR_TEXTURE_SCALE
+            },
+            { 0, 0 },
+            0.f,
+            WHITE);
+    }
 }
 
 void UpdateDrawFrame();
 
 int main(void)
 {
-	InitWindow(WIDTH, HEIGHT, "raylib [core] example - basic window");
-	InitPlayer();
+    InitWindow(WIDTH, HEIGHT, "raylib [core] example - consistent animation position");
+    InitPlayer();
 
-	#if defined(PLATFORM_WEB)
-    	emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
-	#else
-		SetTargetFPS(60);   // Set our game to run at 60 frames-per-second
-		//--------------------------------------------------------------------------------------
+    #if defined(PLATFORM_WEB)
+        emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
+    #else
+        SetTargetFPS(60);
+        while (!WindowShouldClose())
+        {
+            UpdateDrawFrame();
+        }
+    #endif
 
-		// Main game loop
-		while (!WindowShouldClose())    // Detect window close button or ESC key
-		{
-			UpdateDrawFrame();
-		}
-	#endif
-
-	CloseWindow();
-
-	return 0;
+    CloseWindow();
+    return 0;
 }
 
 void UpdateDrawFrame()
 {
-	UpdatePlayer();
+    UpdatePlayer();
 
-	BeginDrawing();
-	
-	ClearBackground(BLACK);
+    BeginDrawing();
+    ClearBackground(BLACK);
 
-	DrawPlayer();
+    DrawPlayer();
 
-	if (GuiButton({200, 200, 100, 30}, "#32# PRESS ME!"))
-	{
-		std::cout << "Pressed!\n";
-	}
+    if (GuiButton({200, 200, 100, 30}, "#32# PRESS ME!"))
+    {
+        std::cout << "Pressed!\n";
+    }
 
-	EndDrawing();
+    EndDrawing();
 }
