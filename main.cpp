@@ -62,6 +62,11 @@ void UpdatePlayer()
         framesCounter = 0;
     }
 
+    if (IsKeyDown(KEY_W)) { playerPos.y -= PLR_SPEED; frameRow = 1; }
+    if (IsKeyDown(KEY_A)) { playerPos.x -= PLR_SPEED; frameRow = 3; }
+    if (IsKeyDown(KEY_S)) { playerPos.y += PLR_SPEED; frameRow = 0; }
+    if (IsKeyDown(KEY_D)) { playerPos.x += PLR_SPEED; frameRow = 2; }
+
     if (isAxeMode)
     {
         framesCounter++;
@@ -83,10 +88,6 @@ void UpdatePlayer()
     }
     else
     {
-        if (IsKeyDown(KEY_W)) { playerPos.y -= PLR_SPEED; frameRow = 1; }
-        if (IsKeyDown(KEY_A)) { playerPos.x -= PLR_SPEED; frameRow = 3; }
-        if (IsKeyDown(KEY_S)) { playerPos.y += PLR_SPEED; frameRow = 0; }
-        if (IsKeyDown(KEY_D)) { playerPos.x += PLR_SPEED; frameRow = 2; }
 
         frameRec.y = frameHeight * frameRow;
 
