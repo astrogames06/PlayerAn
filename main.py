@@ -98,6 +98,8 @@ def extract_sprites(img, spacing=2, sprites_per_row=5):
     return result
 
 if __name__ == "__main__":
-    img = Image.open("spritesheet.png").convert("RGBA")
+    name = input()
+    path = f'images/{name}'
+    img = Image.open(path).convert("RGBA")
     output = extract_sprites(img, spacing=0, sprites_per_row=8)  # adjust sprites_per_row as needed
-    output.save("packed_spritesheet.png")
+    output.save(f"images/packed_{name}")

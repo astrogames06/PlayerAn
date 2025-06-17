@@ -22,6 +22,7 @@ const float PLR_SPEED = 5.f;
 
 Texture2D spriteSheet;
 int frameCount = 8; // Number of frames in the sprite sheet
+int rowCount = 4; // Number of rows of frames
 
 int frameWidth;
 int frameHeight;
@@ -38,10 +39,10 @@ int frameRow = 0;
 
 void InitPlayer()
 {
-	spriteSheet = LoadTexture("egg.png");
+	spriteSheet = LoadTexture("images/axe.png");
 	frameCount = 8; // 8 columns
 	frameWidth = spriteSheet.width / frameCount;
-	frameHeight = 17.25; // 4 rows
+	frameHeight = spriteSheet.height / rowCount; // 4 rows
 	frameRec = { 0.0f, 0.0f, (float)frameWidth, (float)frameHeight };
 }
 
@@ -111,7 +112,7 @@ void UpdateDrawFrame()
 
 	BeginDrawing();
 	
-	ClearBackground(RAYWHITE);
+	ClearBackground(BLACK);
 
 	DrawPlayer();
 
