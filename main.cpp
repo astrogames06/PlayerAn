@@ -55,7 +55,7 @@ void InitPlayer()
 
 void UpdatePlayer()
 {
-    if (IsKeyPressed(KEY_E))
+    if (IsKeyPressed(KEY_E) && !isAxeMode)
     {
         isAxeMode = true;
         currentFrame = 0;
